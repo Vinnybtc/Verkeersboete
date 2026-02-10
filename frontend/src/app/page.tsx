@@ -5,6 +5,8 @@ import FileUpload from "@/components/FileUpload";
 import UserForm from "@/components/UserForm";
 import ResultPanel from "@/components/ResultPanel";
 
+const DEMO_MODE = !process.env.NEXT_PUBLIC_API_URL;
+
 type Step = "register" | "upload" | "result";
 
 interface UserData {
@@ -35,6 +37,54 @@ interface ProcessResult {
   message: string;
 }
 
+function getDemoResult(): ProcessResult {
+  return {
+    case_id: "demo-" + Math.random().toString(36).slice(2, 10),
+    status: "document_generated",
+    extracted_data: {
+      beschikkingsnummer: "9876543210",
+      overtreding_datum: "2025-12-15",
+      feitcode: "VA020",
+      omschrijving:
+        "Overschrijding van de maximumsnelheid op autosnelwegen met 12 km/h",
+      locatie: "A2 hectometerpaal 43.2, gemeente Utrecht",
+      bedrag: 95.0,
+      instantie: "Politie Eenheid Midden-Nederland",
+    },
+    legal_analysis: `============================================================
+JURIDISCHE ANALYSE - VERKEERSBOETE
+============================================================
+
+Samenvatting: De beschikking bevat mogelijke aanknopingspunten voor bezwaar op basis van meetonnauwkeurigheid en bebording.
+Geschatte slagingskans: 35%
+
+BEZWAARGRONDEN:
+----------------------------------------
+
+1. Meetonnauwkeurigheid snelheidsmeting
+   Sterkte: gemiddeld
+   Wettelijke basis: Art. 4 Wahv, NMi-voorschriften meetmiddelen
+   Toelichting: Bij snelheidsmetingen onder 100 km/h geldt een correctie van 3 km/h. Het is van belang dat het ijkrapport van de meetapparatuur geldig was op het moment van de meting.
+
+2. Tijdelijke snelheidsbeperking en bebording
+   Sterkte: zwak
+   Wettelijke basis: BABW, art. 21 RVV 1990
+   Toelichting: Op trajecten van de A2 bij Utrecht zijn regelmatig tijdelijke snelheidsbeperkingen van kracht. Indien de bebording niet conform de wettelijke eisen was geplaatst, kan de meting ongeldig zijn.
+
+3. Formeel gebrek: Termijnoverschrijding
+   Sterkte: zwak
+   Wettelijke basis: Art. 4 lid 2 Wahv
+   Toelichting: De beschikking dient binnen 4 maanden na de overtreding te zijn verzonden. Controleer of deze termijn is overschreden.
+
+Aanbeveling: Bezwaar maken is mogelijk maar de slagingskans is beperkt. Het is aan te raden om het ijkrapport op te vragen en de bebording ter plaatse te controleren.
+============================================================`,
+    success_probability: 0.35,
+    bezwaarschrift_path: "/generated/bezwaarschrift_demo.pdf",
+    message:
+      "Boete succesvol geanalyseerd en bezwaarschrift gegenereerd. (DEMO MODUS)",
+  };
+}
+
 export default function Home() {
   const [step, setStep] = useState<Step>("register");
   const [user, setUser] = useState<UserData | null>(null);
@@ -59,6 +109,14 @@ export default function Home() {
 
     setLoading(true);
     setError(null);
+
+    if (DEMO_MODE) {
+      await new Promise((r) => setTimeout(r, 2000));
+      setResult(getDemoResult());
+      setStep("result");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch(`/api/process-fine?fine_id=${fineId}`, {
@@ -92,6 +150,13 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
+      {DEMO_MODE && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+          <strong>Demo modus</strong> &mdash; De frontend draait zonder backend.
+          Alle stappen worden gesimuleerd met voorbeelddata.
+        </div>
+      )}
+
       {/* Progress indicator */}
       <div className="flex items-center gap-2 text-sm">
         <span
@@ -133,7 +198,7 @@ export default function Home() {
 
       {/* Step 1: Registration */}
       {step === "register" && (
-        <UserForm onRegistered={handleUserRegistered} />
+        <UserForm onRegistered={handleUserRegistered} demoMode={DEMO_MODE} />
       )}
 
       {/* Step 2: Upload */}
@@ -143,7 +208,11 @@ export default function Home() {
             Welkom, {user.name}. Upload nu uw boete-document.
           </div>
 
-          <FileUpload userId={user.id} onUploaded={handleFileUploaded} />
+          <FileUpload
+            userId={user.id}
+            onUploaded={handleFileUploaded}
+            demoMode={DEMO_MODE}
+          />
 
           {fineId && (
             <div className="flex gap-4">
@@ -152,7 +221,9 @@ export default function Home() {
                 disabled={loading}
                 className="px-6 py-2 bg-brand-600 text-white rounded hover:bg-brand-700 disabled:opacity-50"
               >
-                {loading ? "Bezig met analyseren..." : "Analyseer & Genereer Bezwaarschrift"}
+                {loading
+                  ? "Bezig met analyseren..."
+                  : "Analyseer & Genereer Bezwaarschrift"}
               </button>
             </div>
           )}

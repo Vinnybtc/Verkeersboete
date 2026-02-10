@@ -14,9 +14,10 @@ interface UserData {
 
 interface Props {
   onRegistered: (user: UserData) => void;
+  demoMode?: boolean;
 }
 
-export default function UserForm({ onRegistered }: Props) {
+export default function UserForm({ onRegistered, demoMode }: Props) {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -39,8 +40,17 @@ export default function UserForm({ onRegistered }: Props) {
     setLoading(true);
     setError(null);
 
+    if (demoMode) {
+      await new Promise((r) => setTimeout(r, 500));
+      onRegistered({
+        id: "demo-" + Math.random().toString(36).slice(2, 10),
+        ...form,
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Create user
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +64,6 @@ export default function UserForm({ onRegistered }: Props) {
 
       const user: UserData = await res.json();
 
-      // Sign authorization
       await fetch("/api/users/authorize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,7 +166,7 @@ export default function UserForm({ onRegistered }: Props) {
             />
             <span className="text-sm text-gray-600">
               Ik machtig de Verkeersboete AI Agent om namens mij bezwaar te maken
-              tegen de door mij geüploade verkeersboete(s). Ik begrijp dat dit een
+              tegen de door mij ge&uuml;ploade verkeersboete(s). Ik begrijp dat dit een
               geautomatiseerde dienst is en geen vervanging voor persoonlijk
               juridisch advies. Mijn gegevens worden verwerkt conform de AVG.
             </span>

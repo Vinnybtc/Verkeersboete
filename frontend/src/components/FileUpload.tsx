@@ -5,19 +5,39 @@ import { useCallback, useState } from "react";
 interface Props {
   userId: string;
   onUploaded: (fineId: string) => void;
+  demoMode?: boolean;
 }
 
-export default function FileUpload({ userId, onUploaded }: Props) {
+export default function FileUpload({ userId, onUploaded, demoMode }: Props) {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [extractedData, setExtractedData] = useState<Record<string, unknown> | null>(null);
+  const [extractedData, setExtractedData] = useState<Record<
+    string,
+    string | number | boolean
+  > | null>(null);
 
   const uploadFile = async (file: File) => {
     setUploading(true);
     setError(null);
     setFileName(file.name);
+
+    if (demoMode) {
+      await new Promise((r) => setTimeout(r, 1500));
+      const demoData = {
+        id: "demo-fine-" + Math.random().toString(36).slice(2, 10),
+        beschikkingsnummer: "9876543210",
+        feitcode: "VA020",
+        bedrag: 95.0,
+        locatie: "A2 hectometerpaal 43.2, gemeente Utrecht",
+        instantie: "Politie Eenheid Midden-Nederland",
+      };
+      setExtractedData(demoData);
+      onUploaded(demoData.id);
+      setUploading(false);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
@@ -52,7 +72,7 @@ export default function FileUpload({ userId, onUploaded }: Props) {
       const file = e.dataTransfer.files[0];
       if (file) uploadFile(file);
     },
-    [userId]
+    [userId, demoMode]
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,11 +99,13 @@ export default function FileUpload({ userId, onUploaded }: Props) {
       >
         {uploading ? (
           <div className="text-gray-500">
-            <div className="animate-pulse">Bezig met uploaden en OCR-verwerking...</div>
+            <div className="animate-pulse">
+              Bezig met uploaden en OCR-verwerking...
+            </div>
           </div>
         ) : fileName ? (
           <div className="text-green-600">
-            Bestand geüpload: <strong>{fileName}</strong>
+            Bestand ge&uuml;pload: <strong>{fileName}</strong>
           </div>
         ) : (
           <div className="space-y-2">
@@ -114,7 +136,9 @@ export default function FileUpload({ userId, onUploaded }: Props) {
 
       {extractedData && (
         <div className="mt-4 bg-gray-50 rounded p-4">
-          <h3 className="font-medium text-sm mb-2">Geëxtraheerde gegevens:</h3>
+          <h3 className="font-medium text-sm mb-2">
+            Ge&euml;xtraheerde gegevens:
+          </h3>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
             {extractedData.beschikkingsnummer && (
               <>
