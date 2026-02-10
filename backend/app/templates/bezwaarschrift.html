@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #1a1a1a;
+        }
+
+        .header {
+            margin-bottom: 2em;
+        }
+
+        .sender {
+            margin-bottom: 2em;
+        }
+
+        .recipient {
+            margin-bottom: 2em;
+        }
+
+        .date-place {
+            margin-bottom: 2em;
+        }
+
+        .subject {
+            margin-bottom: 1.5em;
+        }
+
+        .subject strong {
+            font-size: 11pt;
+        }
+
+        .body-text {
+            text-align: justify;
+        }
+
+        .body-text p {
+            margin-bottom: 0.8em;
+        }
+
+        .grounds-section {
+            margin: 1.5em 0;
+        }
+
+        .ground {
+            margin-bottom: 1.2em;
+            padding-left: 1em;
+        }
+
+        .ground-title {
+            font-weight: bold;
+            margin-bottom: 0.3em;
+        }
+
+        .closing {
+            margin-top: 2em;
+        }
+
+        .signature {
+            margin-top: 3em;
+        }
+
+        .annexes {
+            margin-top: 2em;
+            border-top: 1px solid #ccc;
+            padding-top: 1em;
+        }
+
+        .footer-note {
+            margin-top: 2em;
+            font-size: 9pt;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 0.5em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sender">
+    {{ user_name }}<br>
+    {% if user_address %}{{ user_address }}<br>{% endif %}
+    {% if user_postal_code and user_city %}{{ user_postal_code }} {{ user_city }}{% endif %}
+</div>
+
+<div class="recipient">
+    Officier van Justitie<br>
+    Parket CVOM<br>
+    Postbus 8300<br>
+    3503 RH Utrecht
+</div>
+
+<div class="date-place">
+    {% if user_city %}{{ user_city }}{% else %}Plaats{% endif %}, {{ current_date }}
+</div>
+
+<div class="subject">
+    <strong>Betreft: Beroepschrift tegen beschikking nr. {{ beschikkingsnummer }}</strong><br>
+    <strong>Feitcode: {{ feitcode }}</strong><br>
+    <strong>Datum overtreding: {{ overtreding_datum }}</strong>
+</div>
+
+<div class="body-text">
+    <p>Geachte Officier van Justitie,</p>
+
+    <p>
+        Hierbij teken ik, {{ user_name }}, beroep aan tegen de aan mij opgelegde administratieve
+        sanctie met beschikkingsnummer <strong>{{ beschikkingsnummer }}</strong>, d.d. {{ overtreding_datum }},
+        ter hoogte van € {{ bedrag }}, wegens vermeende overtreding van feitcode {{ feitcode }}
+        ({{ omschrijving }}).
+    </p>
+
+    <p>
+        De vermeende overtreding zou hebben plaatsgevonden op {{ locatie }}
+        {% if instantie %}en is geconstateerd door {{ instantie }}{% endif %}.
+    </p>
+
+    <p>
+        Ondergetekende is van mening dat de opgelegde sanctie ten onrechte is opgelegd en voert
+        hiertoe de volgende gronden aan:
+    </p>
+
+    <div class="grounds-section">
+        <h3>Gronden van het beroep</h3>
+
+        {% for ground in legal_grounds %}
+        <div class="ground">
+            <div class="ground-title">{{ loop.index }}. {{ ground.grond }}</div>
+            <p>{{ ground.toelichting }}</p>
+            <p><em>Wettelijke basis: {{ ground.wettelijke_basis }}</em></p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <p>
+        Op grond van het voorgaande verzoek ik u om de opgelegde beschikking te vernietigen,
+        althans het sanctiebedrag op nihil te stellen.
+    </p>
+
+    <p>
+        Tevens verzoek ik u, op grond van artikel 13a van de Wahv juncto artikel 7:15 van de
+        Algemene wet bestuursrecht, om vergoeding van de door mij gemaakte proceskosten,
+        conform het Besluit proceskosten bestuursrecht.
+    </p>
+
+    <p>
+        Ik verzoek u mij in de gelegenheid te stellen om te worden gehoord alvorens op dit
+        beroepschrift te beslissen, conform artikel 7:16 Awb.
+    </p>
+</div>
+
+<div class="closing">
+    <p>
+        In afwachting van uw reactie verblijf ik,
+    </p>
+    <p>
+        Hoogachtend,
+    </p>
+</div>
+
+<div class="signature">
+    <p>
+        {{ user_name }}<br>
+        {% if user_email %}E-mail: {{ user_email }}<br>{% endif %}
+        {% if user_phone %}Telefoon: {{ user_phone }}{% endif %}
+    </p>
+</div>
+
+<div class="annexes">
+    <strong>Bijlagen:</strong>
+    <ul>
+        <li>Kopie van de beschikking (beschikkingsnummer {{ beschikkingsnummer }})</li>
+        <li>Machtigingsformulier (indien van toepassing)</li>
+    </ul>
+</div>
+
+<div class="footer-note">
+    Dit document is gegenereerd ter ondersteuning van het beroepsproces. Raadpleeg een
+    juridisch professional voor persoonlijk advies.
+</div>
+
+</body>
+</html>
